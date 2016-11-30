@@ -140,19 +140,21 @@ public class PlayerOnCollision : NetworkBehaviour {
 		RpcOnRez ();
 	}
 	[ClientRpc]
-	void RpcShowRespects(string savior, string saved){
+	void RpcShowRespects(string savior2, string saved2){
 		if (isLocalPlayer) {
-			Debug.Log (savior);
-			PlayerAnnounce.text = ClientLocalMessage (savior);
+			Debug.Log (savior2);
+			PlayerAnnounce.text = ClientLocalMessage (savior2);
+			Debug.Log (pNameOnPlayer);
 			
-		} else if (savior.Equals (this.pNameOnPlayer)) {
-			PlayerAnnounce.text = "You just saved " + saved + ". That's my kitty !";
+		} else if (savior2.Equals (pNameOnPlayer)) {
+			PlayerAnnounce.text = "You just saved " + saved2 + ". That's my kitty !";
 			RezCount++;
 			nbrRezText.text = RezCount.ToString ();
 
 		}else
-			PlayerAnnounce.text = savior + " just saved " + saved + ". Well Done !";
-		Debug.Log (savior);
+			PlayerAnnounce.text = savior2 + " just saved " + saved2 + ". Well Done !";
+		Debug.Log (pNameOnPlayer);
+
 	}
 
 
