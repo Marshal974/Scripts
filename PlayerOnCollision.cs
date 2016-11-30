@@ -27,6 +27,8 @@ public class PlayerOnCollision : NetworkBehaviour {
 	[SyncVar]
 	public string saviorName = "pupute";
 
+	public GameObject isHeSavior;
+
 	[SyncVar]
 	public string pNameOnPlayer;
 
@@ -74,7 +76,7 @@ public class PlayerOnCollision : NetworkBehaviour {
 		}
 		if (isLocalPlayer) {
 			if (otherC.gameObject.tag == "Player" && alive == false) {
-			saviorName = otherC.GetComponent<PlayerOnCollision>().pNameOnPlayer;
+				saviorName = otherC.name;
 			CmdTellThemAll (saviorName, pNameOnPlayer);
 //			otherC.gameObject.name = saviorNameID;
 //			Debug.Log (saviorNameID);
@@ -140,13 +142,18 @@ public class PlayerOnCollision : NetworkBehaviour {
 		RpcOnRez ();
 	}
 	[ClientRpc]
+
 	void RpcShowRespects(string savior2, string saved2){
+		
+
+		isHeSavior  = GameObject.Find("Player"+savior2);
+
 		if (isLocalPlayer) {
 			Debug.Log (savior2);
 			PlayerAnnounce.text = ClientLocalMessage (savior2);
 			Debug.Log (pNameOnPlayer);
 			
-		} else if (savior2.Equals (pNameOnPlayer)) {
+		} else if (isHeSavior.name == savior2) {
 			PlayerAnnounce.text = "You just saved " + saved2 + ". That's my kitty !";
 			RezCount++;
 			nbrRezText.text = RezCount.ToString ();
