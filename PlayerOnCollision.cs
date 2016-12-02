@@ -7,58 +7,58 @@ using UnityEngine.Networking;
 public class PlayerOnCollision : NetworkBehaviour {
 
 	Vector3 spawnSpot;
-//	private string saviorNameID;
 	public GameObject deathEffect;
 	public int currentScene = 0;
 	public Rigidbody rb;
 	public GameObject repere;
-	public Material matMort;
-	public Material normalMat;
-	[SyncVar]bool alive = true;
+	public AudioClip onBounceSound;
+
+	[SyncVar]public bool alive = true;
 	public GameObject lifeEffect;
 	private GameObject nbrDeathObj ;
 	private Text nbrDeathText;
-	private GameObject nbrRezObj ;
-	private Text nbrRezText;
 	private GameObject messObj ;
-	private Text PlayerAnnounce;
+	public Text PlayerAnnounce;
 	private int DeathCount = 0;
-	private int RezCount = 0;
+	public AudioClip onDeathSound;
+	public AudioClip onRezSound;
+	public string isHeSavior;
 	[SyncVar]
 	public string saviorName = "pupute";
 
-	public GameObject isHeSavior;
 
 	[SyncVar]
 	public string pNameOnPlayer;
+	ParticleSystem DeadEffect;
+	ParticleSystem.EmissionModule DeadEffectEmi;
 
-	// Use this for initialization
 	void Start () {
-
-		pNameOnPlayer = this.GetComponent<ChoosePlayerName> ().pname; // !!!!a faire plus tard (genre en update) ou dés que ca change...le prob vient de la.
+		DeadEffect = GetComponent<ParticleSystem> ();
+		DeadEffectEmi = DeadEffect.emission;
+		pNameOnPlayer = this.GetComponent<ChoosePlayerName> ().pname; 
 		spawnSpot = transform.position;
 		rb = this.GetComponent<Rigidbody> ();		
 		messObj = GameObject.Find("LocalMessage");
 		nbrDeathObj = GameObject.Find ("NbrDeath");
 		nbrDeathText = nbrDeathObj.GetComponent<Text> ();
 		PlayerAnnounce = messObj.GetComponent<Text> ();
-		nbrRezObj = GameObject.Find ("NbrRez");
-		nbrRezText = nbrRezObj.GetComponent<Text> ();
+		SetEmiDown ();
+	}
+	void SetEmiUp()
+	{
+		DeadEffectEmi.rate = new ParticleSystem.MinMaxCurve (10f);
+	}
+	void SetEmiDown()
+	{
+		DeadEffectEmi.rate = new ParticleSystem.MinMaxCurve (0f);
 	}
 		
 	void OnCollisionEnter (Collision other) {
-//		if (iscl) {
-		//check if its an ennemy
-//		if (other.gameObject.tag == "BadGuys" && alive == true && isServer) {
-//				RpcOnDeath (); //contact on server.
-//
-//			}
+
 		if (other.gameObject.tag == "BadGuys" && alive == true && isLocalPlayer) {
 			CmdIAmDead ();
-//Contact on client : if it is, tell all clients this player is dead.
-
 		}
-//		}
+				
 	}
 	[Command]
 	public void CmdIAmDead(){
@@ -76,93 +76,95 @@ public class PlayerOnCollision : NetworkBehaviour {
 		}
 		if (isLocalPlayer) {
 			if (otherC.gameObject.tag == "Player" && alive == false) {
-				saviorName = otherC.name;
+				saviorName = otherC.gameObject.GetComponent<PlayerOnCollision>().pNameOnPlayer;
 			CmdTellThemAll (saviorName, pNameOnPlayer);
-//			otherC.gameObject.name = saviorNameID;
-//			Debug.Log (saviorNameID);
 
 			}
 		}
 	}
 		
 	[ClientRpc]
-	public void RpcOnDeath() 
+	public void RpcOnDeath()
 	{
 		Instantiate (deathEffect, transform.position, Quaternion.identity);
-		gameObject.GetComponent<BoxCollider>().isTrigger = true; 
+		gameObject.GetComponent<BoxCollider> ().isTrigger = true; 
 		rb.velocity = Vector3.zero;
+		AudioSource.PlayClipAtPoint (onDeathSound, gameObject.transform.position);
 		if (isLocalPlayer) {
+			GameObject.Find ("RespawnBtn").GetComponent<Button> ().enabled = true;
+			GameObject.Find ("RespawnBtn").GetComponent<Image> ().enabled = true;
 			gameObject.GetComponent<PlayerController> ().enabled = false;
-		}
-//		gameObject.GetComponent<BoxCollider> ().enabled = false;
-//		Instantiate (repere, transform.position, Quaternion.identity);
-		alive = false;
-		rb.useGravity = false;
-		rb.isKinematic = true;
-		if (isLocalPlayer) {
 			DeathCount++;
 			nbrDeathText.text = DeathCount.ToString ();
 		}
-		//transform.position = spawnSpot;
+
+
+		alive = false;
+		rb.useGravity = false;
+		rb.isKinematic = true;
+		if (!isLocalPlayer) {
+			SetEmiUp ();
+		}
 	}
+
 	[ClientRpc]
 	public void RpcOnRez()
 	{
 		if (isLocalPlayer) {
 			gameObject.GetComponent<PlayerController> ().enabled = true;
+			GameObject.Find ("RespawnBtn").GetComponent<Button> ().enabled = false;
+			GameObject.Find ("RespawnBtn").GetComponent<Image> ().enabled = false;
 		}
-			alive = true;
-			gameObject.GetComponent<BoxCollider>().isTrigger = false; 
-			rb.useGravity = true;
-			Instantiate (lifeEffect, transform.position, Quaternion.identity);
-		    rb.velocity = Vector3.zero;
+		alive = true;
+		gameObject.GetComponent<BoxCollider> ().isTrigger = false; 
+		rb.useGravity = true;
+		Instantiate (lifeEffect, transform.position, Quaternion.identity);
+		rb.velocity = Vector3.zero;
 		rb.isKinematic = false;
-//		}
+		AudioSource.PlayClipAtPoint (onRezSound, gameObject.transform.position);
+		if (!isLocalPlayer) {
+			SetEmiDown ();
+		}
 	}
 
-	string ClientLocalMessage(string otherCName){
+
+
+	IEnumerator ClientLocalMessage(string otherCName){
 		string totalMess;
-//
-//		if (isLocalPlayer) {
-			
-			//			messObj.GetComponent<Text> ().text = messTxTFinal;
-			totalMess = otherCName + " just saved your ass! Run kitty Run!";
-//			CmdTellThemAll (saviorName, pNameOnPlayer);
-			return totalMess;
-//
-//		} else {
-//			return "";
-//		}
+		totalMess = otherCName + " just saved your ass! Run kitty Run!";
+		PlayerAnnounce.text = totalMess;
+		yield return new WaitForSeconds (3.0f);
+		PlayerAnnounce.text = "";
+	}
+
+	IEnumerator OtherClientLocalMessage(string otherCName, string elseCname){
+		PlayerAnnounce.text = otherCName + " just saved " + elseCname + ". Well Done !";
+		yield return new WaitForSeconds (3.0f);
+		PlayerAnnounce.text = "";
 	}
 
 	[Command]
 	void CmdTellThemAll(string savior, string saved){
-//		saviorName = savior;
 		RpcShowRespects (savior, saved);
 		RpcOnRez ();
 	}
 	[ClientRpc]
 
-	void RpcShowRespects(string savior2, string saved2){
-		
+	void RpcShowRespects (string savior2, string saved2)
+	{
 
-		isHeSavior  = GameObject.Find("Player"+savior2);
 
 		if (isLocalPlayer) {
-			Debug.Log (savior2);
-			PlayerAnnounce.text = ClientLocalMessage (savior2);
-			Debug.Log (pNameOnPlayer);
-			
-		} else if (isHeSavior.name == savior2) {
-			PlayerAnnounce.text = "You just saved " + saved2 + ". That's my kitty !";
-			RezCount++;
-			nbrRezText.text = RezCount.ToString ();
+			StartCoroutine (ClientLocalMessage (savior2));
 
-		}else
-			PlayerAnnounce.text = savior2 + " just saved " + saved2 + ". Well Done !";
-		Debug.Log (pNameOnPlayer);
+		} else {
+			StartCoroutine (OtherClientLocalMessage (savior2, saved2));
+
+		}
+	
 
 	}
 
-
 }
+
+

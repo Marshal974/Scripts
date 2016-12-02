@@ -4,7 +4,7 @@ using UnityEngine.Networking;
 
 public class Player_ID : NetworkBehaviour {
 
-	[SyncVar] public string playerUniqueIdentity;
+	[SyncVar] private string playerUniqueIdentity;
 		private NetworkInstanceId playerNetID;
 	private Transform myTransform;
 

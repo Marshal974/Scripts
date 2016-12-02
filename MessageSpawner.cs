@@ -4,20 +4,14 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class MessageSpawner : NetworkBehaviour {
-
-
-
-
-	// Use this for initialization
-	void Start () {
-
-	}
-	
-	// Update is called once per frame
-	void Update ()
-	{
-
-
-
-	}
+//
+//	private Text playerMessField;
+//
+//
+//	// Use this for initialization
+//	void Start () {
+//		playerMessField = GameObject.Find("LocalMessage").GetComponent<Text> ();
+//	}
+//
+//
 }
