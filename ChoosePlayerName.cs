@@ -1,38 +1,34 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 public class ChoosePlayerName : NetworkBehaviour {
 
-	[SyncVar]
-	public string pname = "Player";
+	[SyncVar] public string pname = "Player";
 
-	void OnGUI(){
-		
+	public void SayYourName()
+	{
 		if (isLocalPlayer) 
 		{
-			
-			pname = GUI.TextField (new Rect (25, Screen.height - 40, 100, 30), pname);
-
-			if (GUI.Button (new Rect (130, Screen.height - 40, 80, 30), "Change")) 
-			{
-				CmdChangeName (pname);
-			}
+			pname = GameObject.Find("NameInputField").transform.FindChild("Text").GetComponent<Text>().text;
+			CmdChangeName (pname);
 		}
-			
 	}
 
 	[Command]
-	public void CmdChangeName(string newName)
+	public void CmdChangeName(string newname)             //string newName)
 	{
-		pname = newName;
-
+		gameObject.GetComponent<PlayerChangeColor> ().CmdChangeColor ();
+		pname = newname;
 		RpcChangeThatName (pname);
 
 	}
-	// Use this for initialization
+
 	void Start () {
-		
+		if(isLocalPlayer){
+			GameObject.Find ("ChangeYourName").GetComponent<Button> ().onClick.AddListener (SayYourName);
+		}
 	}
 	
 	// Update is called once per frame
@@ -42,8 +38,10 @@ public class ChoosePlayerName : NetworkBehaviour {
 
 	}
 	[ClientRpc]
-	void RpcChangeThatName (string newName)
+	public void RpcChangeThatName (string newName)
 	{
-		gameObject.GetComponent<PlayerOnCollision> ().pNameOnPlayer = newName;
+//		if (isLocalPlayer) {
+			gameObject.GetComponent<PlayerOnCollision> ().pNameOnPlayer = newName;
+//		}
 	}
 }
