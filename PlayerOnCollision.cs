@@ -5,8 +5,8 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 
 public class PlayerOnCollision : NetworkBehaviour {
-
-	Vector3 spawnSpot;
+//
+//	Vector3 spawnSpot;
 	public GameObject deathEffect;
 	public int currentScene = 0;
 	public Rigidbody rb;
@@ -36,7 +36,7 @@ public class PlayerOnCollision : NetworkBehaviour {
 		DeadEffect = GetComponent<ParticleSystem> ();
 		DeadEffectEmi = DeadEffect.emission;
 		pNameOnPlayer = this.GetComponent<ChoosePlayerName> ().pname; 
-		spawnSpot = transform.position;
+//		spawnSpot = transform.position;
 		rb = this.GetComponent<Rigidbody> ();		
 		messObj = GameObject.Find("LocalMessage");
 		nbrDeathObj = GameObject.Find ("NbrDeath");
@@ -66,18 +66,19 @@ public class PlayerOnCollision : NetworkBehaviour {
 	}
 		void OnTriggerEnter(Collider otherC)
 	{
-		if (otherC.gameObject.name == "Goal") {
-			currentScene += 1;
-			DontDestroyOnLoad (gameObject);
-			SceneManager.LoadScene (currentScene);
-			transform.position = spawnSpot;
-			gameObject.GetComponent<Rigidbody> ().velocity = new Vector3 (0, 0, 0);
-				
-		}
+//		if (otherC.gameObject.name == "Goal") {
+//			currentScene += 1;
+//			DontDestroyOnLoad (gameObject);
+//			SceneManager.LoadScene (currentScene);
+//			transform.position = spawnSpot;
+//			gameObject.GetComponent<Rigidbody> ().velocity = new Vector3 (0, 0, 0);
+//				
+//		}
 		if (isLocalPlayer) {
 			if (otherC.gameObject.tag == "Player" && alive == false) {
 				saviorName = otherC.gameObject.GetComponent<PlayerOnCollision>().pNameOnPlayer;
 			CmdTellThemAll (saviorName, pNameOnPlayer);
+
 
 			}
 		}
@@ -96,6 +97,7 @@ public class PlayerOnCollision : NetworkBehaviour {
 			gameObject.GetComponent<PlayerController> ().enabled = false;
 			DeathCount++;
 			nbrDeathText.text = DeathCount.ToString ();
+			gameObject.GetComponent<PlayerKillCam> ().FindNewTarget ();
 		}
 
 
@@ -114,6 +116,7 @@ public class PlayerOnCollision : NetworkBehaviour {
 			gameObject.GetComponent<PlayerController> ().enabled = true;
 			GameObject.Find ("RespawnBtn").GetComponent<Button> ().enabled = false;
 			GameObject.Find ("RespawnBtn").GetComponent<Image> ().enabled = false;
+			gameObject.GetComponent<PlayerKillCam> ().ResetCam ();
 		}
 		alive = true;
 		gameObject.GetComponent<BoxCollider> ().isTrigger = false; 

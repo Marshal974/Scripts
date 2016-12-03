@@ -9,7 +9,7 @@ public class ChoosePlayerName : NetworkBehaviour {
 
 	public void SayYourName()
 	{
-		if (isLocalPlayer) 
+		if (isLocalPlayer && GameObject.Find("NameInputField").transform.FindChild("Text").GetComponent<Text>().text != "" ) 
 		{
 			pname = GameObject.Find("NameInputField").transform.FindChild("Text").GetComponent<Text>().text;
 			CmdChangeName (pname);

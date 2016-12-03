@@ -30,6 +30,7 @@ public class BadBoyPath : NetworkBehaviour {
 			}
 
 			transform.position = Vector3.MoveTowards (transform.position, patrolPoints [currentPoint].transform.position, speedBB * Time.deltaTime);
+			transform.rotation = Quaternion.LookRotation(patrolPoints[currentPoint].transform.position);
 	
 		}
 	}

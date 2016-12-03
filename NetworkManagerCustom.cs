@@ -21,6 +21,7 @@ public class NetworkManagerCustom : NetworkManager {
 		SetIPAdress ();
 		SetPort ();
 		NetworkManager.singleton.StartClient ();
+
 	}
 	public void ConnectToLobby ()
 	{
