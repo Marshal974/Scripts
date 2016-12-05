@@ -5,8 +5,7 @@ using UnityEngine.Networking;
 
 public class Player_SavedAGuy : NetworkBehaviour {
 
-	[SyncVar]
-	public int rezCount;
+	[SyncVar]public int rezCount;
 	private GameObject rezMessObj;
 	private Text RezMess;
 	private bool savedPlayerAlive;
@@ -32,12 +31,13 @@ public class Player_SavedAGuy : NetworkBehaviour {
 void CmdISavedAGuy(){
 
 		RpcGetRezPoint ();
+
 	}
 
 [ClientRpc]
 void RpcGetRezPoint(){
 	if (isLocalPlayer) {
-
+		gameObject.GetComponent<PlayerOnCollision> ().RezCount++;
 		rezCount++;
 		RezMess.text = rezCount.ToString();
 	}

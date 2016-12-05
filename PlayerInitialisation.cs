@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using System.Collections;
 
 public class PlayerInitialisation : NetworkBehaviour {
+	public bool isThePlayer = false;
 	
 	private GameObject camMenu;
 
@@ -22,6 +23,7 @@ public class PlayerInitialisation : NetworkBehaviour {
 			playerlocalCam.enabled = true;
 			playerAudioL.enabled = true;
 			camMenu.gameObject.SetActive (false);
+			isThePlayer = true;
 	
 
 		}	

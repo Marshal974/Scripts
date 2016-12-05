@@ -1,12 +1,19 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 
 public class PlayerOnCollision : NetworkBehaviour {
 //
 //	Vector3 spawnSpot;
+	public List<string> allPlayersRealNames = new List<string>();
+	public List<Text> allPlayersNickname = new List<Text>();
+	public List<Text> allPlayersdeath = new List<Text>();
+	public List<Text> allPlayersRez = new List<Text>();
+	public GameObject NbrDeathOtherPlayer;
+	[SyncVar]public GameObject theActivePlayer;
 	public GameObject deathEffect;
 	public int currentScene = 0;
 	public Rigidbody rb;
@@ -19,7 +26,8 @@ public class PlayerOnCollision : NetworkBehaviour {
 	private Text nbrDeathText;
 	private GameObject messObj ;
 	public Text PlayerAnnounce;
-	private int DeathCount = 0;
+	[SyncVar(hook = "OnChangeDeath" )]public int DeathCount = 0;
+	[SyncVar(hook = "OnChangeRez")]public int RezCount = 0;
 	public AudioClip onDeathSound;
 	public AudioClip onRezSound;
 	public string isHeSavior;
@@ -27,8 +35,8 @@ public class PlayerOnCollision : NetworkBehaviour {
 	public string saviorName = "pupute";
 
 
-	[SyncVar]
-	public string pNameOnPlayer;
+	[SyncVar]public string pNameOnPlayer;
+
 	ParticleSystem DeadEffect;
 	ParticleSystem.EmissionModule DeadEffectEmi;
 
@@ -42,7 +50,72 @@ public class PlayerOnCollision : NetworkBehaviour {
 		nbrDeathObj = GameObject.Find ("NbrDeath");
 		nbrDeathText = nbrDeathObj.GetComponent<Text> ();
 		PlayerAnnounce = messObj.GetComponent<Text> ();
-		SetEmiDown ();
+		SetEmiDown ();		
+
+		if (isLocalPlayer) {
+			GameObject[] PlayerObjectsArr = GameObject.FindGameObjectsWithTag ("Player");
+
+			foreach (GameObject i in PlayerObjectsArr) {
+				i.GetComponent<PlayerOnCollision> ().InitializeMe ();
+				}
+
+			allPlayersNickname.Add( GameObject.Find ("Player1name").GetComponent<Text>());
+			allPlayersNickname.Add( GameObject.Find ("Player2name").GetComponent<Text>());
+			allPlayersNickname.Add( GameObject.Find ("Player3name").GetComponent<Text>());
+			allPlayersNickname.Add( GameObject.Find ("Player4name").GetComponent<Text>());
+			allPlayersNickname.Add( GameObject.Find ("Player5name").GetComponent<Text>());
+			allPlayersdeath.Add (GameObject.Find("Player1death").GetComponent<Text>());
+			allPlayersdeath.Add (GameObject.Find("Player2death").GetComponent<Text>());
+			allPlayersdeath.Add (GameObject.Find("Player3death").GetComponent<Text>());
+			allPlayersdeath.Add (GameObject.Find("Player4death").GetComponent<Text>());
+			allPlayersdeath.Add (GameObject.Find("Player5death").GetComponent<Text>());
+			allPlayersRez.Add (GameObject.Find("Player1rez").GetComponent<Text>());
+			allPlayersRez.Add (GameObject.Find("Player2rez").GetComponent<Text>());
+			allPlayersRez.Add (GameObject.Find("Player3rez").GetComponent<Text>());
+			allPlayersRez.Add (GameObject.Find("Player4rez").GetComponent<Text>());
+			allPlayersRez.Add (GameObject.Find("Player5rez").GetComponent<Text>());
+
+
+
+		}
+		if (isClient && !isLocalPlayer) {
+
+
+			GameObject[] PlayerObjectsArr = GameObject.FindGameObjectsWithTag ("Player");
+
+			foreach (GameObject i in PlayerObjectsArr) {
+				if (i.GetComponent<PlayerInitialisation> ().isThePlayer == true) {
+					theActivePlayer = i;
+					break;
+				}
+			}
+			InitializeMe ();
+
+		}
+
+	}
+		
+	public void InitializeMe()
+	{
+		GameObject[] PlayerObjectsArr = GameObject.FindGameObjectsWithTag ("Player");
+
+		foreach (GameObject i in PlayerObjectsArr) {
+			if (i.GetComponent<PlayerInitialisation> ().isThePlayer == true) {
+				theActivePlayer = i;
+				return;
+			}
+		}
+
+		if (!isLocalPlayer) {
+			StartCoroutine (DontSpeed ());
+
+		}
+	}
+	IEnumerator DontSpeed()
+	{
+		yield return new WaitForSeconds (0.5f);
+		theActivePlayer.GetComponent<PlayerOnCollision> ().AddPlayerRN (gameObject.name);
+
 	}
 	void SetEmiUp()
 	{
@@ -66,14 +139,7 @@ public class PlayerOnCollision : NetworkBehaviour {
 	}
 		void OnTriggerEnter(Collider otherC)
 	{
-//		if (otherC.gameObject.name == "Goal") {
-//			currentScene += 1;
-//			DontDestroyOnLoad (gameObject);
-//			SceneManager.LoadScene (currentScene);
-//			transform.position = spawnSpot;
-//			gameObject.GetComponent<Rigidbody> ().velocity = new Vector3 (0, 0, 0);
-//				
-//		}
+
 		if (isLocalPlayer) {
 			if (otherC.gameObject.tag == "Player" && alive == false) {
 				saviorName = otherC.gameObject.GetComponent<PlayerOnCollision>().pNameOnPlayer;
@@ -91,21 +157,22 @@ public class PlayerOnCollision : NetworkBehaviour {
 		gameObject.GetComponent<BoxCollider> ().isTrigger = true; 
 		rb.velocity = Vector3.zero;
 		AudioSource.PlayClipAtPoint (onDeathSound, gameObject.transform.position);
-		if (isLocalPlayer) {
-			GameObject.Find ("RespawnBtn").GetComponent<Button> ().enabled = true;
-			GameObject.Find ("RespawnBtn").GetComponent<Image> ().enabled = true;
-			gameObject.GetComponent<PlayerController> ().enabled = false;
-			DeathCount++;
-			nbrDeathText.text = DeathCount.ToString ();
-			gameObject.GetComponent<PlayerKillCam> ().FindNewTarget ();
-		}
 
 
+		DeathCount++;
 		alive = false;
 		rb.useGravity = false;
 		rb.isKinematic = true;
 		if (!isLocalPlayer) {
 			SetEmiUp ();
+		}
+		if (isLocalPlayer) {
+			GameObject.Find ("RespawnBtn").GetComponent<Button> ().enabled = true;
+			GameObject.Find ("RespawnBtn").GetComponent<Image> ().enabled = true;
+			gameObject.GetComponent<PlayerController> ().enabled = false;
+
+			nbrDeathText.text = DeathCount.ToString ();
+			gameObject.GetComponent<PlayerKillCam> ().FindNewTarget ();
 		}
 	}
 
@@ -167,7 +234,98 @@ public class PlayerOnCollision : NetworkBehaviour {
 	
 
 	}
+	public void OnChangeDeath(int deaths){
 
+		if(!isLocalPlayer){
+			//il faut lui dire qui tu es (pnameonplayer) et le nouveau score de morts (deaths)
+			//ensuite il recoit la commande qui va le faire rechercher la ligne correspondant a ton joueur; de la il en déduira la case correcpondant a ta mort; et prendra le deaths pour le mettre dedans.
+			//il doit donc déja savoir quelle ligne est la tienne
+			//quand tu te co, si t pas localtoutca, mais que t'es sur un client; tu dois lui dire : je suis nouveau, attribue moi une ligne dans ta liste; met dans la premiere case mon nom; apres mon scoredeath; et mon scorerez; et souviens toi que tout ca c est a moi.
+
+			theActivePlayer.GetComponent<PlayerOnCollision> ().ChangeOtherDeaths (deaths, gameObject.name);
+		}
+	}
+	public void OnChangeRez(int rez){
+
+		if(!isLocalPlayer){
+			//il faut lui dire qui tu es (pnameonplayer) et le nouveau score de morts (deaths)
+			//ensuite il recoit la commande qui va le faire rechercher la ligne correspondant a ton joueur; de la il en déduira la case correcpondant a ta mort; et prendra le deaths pour le mettre dedans.
+			//il doit donc déja savoir quelle ligne est la tienne
+			//quand tu te co, si t pas localtoutca, mais que t'es sur un client; tu dois lui dire : je suis nouveau, attribue moi une ligne dans ta liste; met dans la premiere case mon nom; apres mon scoredeath; et mon scorerez; et souviens toi que tout ca c est a moi.
+
+			theActivePlayer.GetComponent<PlayerOnCollision> ().ChangeOtherRez (rez, gameObject.name);
+		}
+	}
+	public void OnChangeNickname(string nickN){
+
+		if(!isLocalPlayer){
+			//il faut lui dire qui tu es (pnameonplayer) et le nouveau score de morts (deaths)
+			//ensuite il recoit la commande qui va le faire rechercher la ligne correspondant a ton joueur; de la il en déduira la case correcpondant a ta mort; et prendra le deaths pour le mettre dedans.
+			//il doit donc déja savoir quelle ligne est la tienne
+			//quand tu te co, si t pas localtoutca, mais que t'es sur un client; tu dois lui dire : je suis nouveau, attribue moi une ligne dans ta liste; met dans la premiere case mon nom; apres mon scoredeath; et mon scorerez; et souviens toi que tout ca c est a moi.
+
+			theActivePlayer.GetComponent<PlayerOnCollision> ().ChangeOtherNickname (nickN, gameObject.name);
+		}
+	}
+
+	public void AddPlayerRN (string playerRN){
+		foreach (string i in allPlayersRealNames) 
+		{
+			if (i == playerRN) {
+				
+				return;
+			}
+			
+		}
+		allPlayersRealNames.Add (playerRN);
+
+
+
+	}
+
+	public void ChangeOtherDeaths(int death, string Rname)
+	{
+		int deathsIndex = 0;
+
+		for (int i = 0; i < allPlayersRealNames.Count; i++) 
+		{
+			if (allPlayersRealNames [i] == Rname) {
+				deathsIndex = i;
+				break;
+			}
+		}
+
+		allPlayersdeath [deathsIndex].GetComponent<Text>().text = death.ToString ();
+	}
+
+	public void ChangeOtherRez(int rezs, string Rname)
+	{
+		int deathsIndex = 0;
+
+		for (int i = 0; i < allPlayersRealNames.Count; i++) 
+		{
+			if (allPlayersRealNames [i] == Rname) {
+				deathsIndex = i;
+				break;
+			}
+		}
+
+		allPlayersRez [deathsIndex].GetComponent<Text>().text = rezs.ToString ();
+	}
+	public void ChangeOtherNickname(string Pnamedude, string Rname)
+	{
+		int deathsIndex = 0;
+
+		for (int i = 0; i < allPlayersRealNames.Count; i++) 
+		{
+			if (allPlayersRealNames [i] == Rname) {
+				deathsIndex = i;
+				break;
+			}
+		}
+
+		allPlayersNickname [deathsIndex].GetComponent<Text>().text = Pnamedude;
+	}
 }
 
 

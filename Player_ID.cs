@@ -31,6 +31,7 @@ public class Player_ID : NetworkBehaviour {
 		
 		if (!isLocalPlayer) {
 			myTransform.name = playerUniqueIdentity;
+
 		} 
 
 		else 
@@ -53,6 +54,7 @@ public class Player_ID : NetworkBehaviour {
 	void Update () {
 		if (myTransform.name == "" || myTransform.name == "Player(Clone)") {
 			SetIdentity ();
+
 		}
 	
 	}

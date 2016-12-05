@@ -25,6 +25,7 @@ public class PlayerKillCam : NetworkBehaviour {
 		}
 	}
 		void LateUpdate(){
+		if (playerToFollow == gameObject && activatePlayerFollow == true || previousPlayerToFollow == playerToFollow && activatePlayerFollow == true && listOfPlayersToFollow.Length >3) 
 		{
 			FindNewTarget ();
 		} 

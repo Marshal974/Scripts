@@ -6,19 +6,16 @@ public class ShowTab : MonoBehaviour {
 	private GameObject ChildTab;
 
 	void Awake(){
-//		actifTab = false;
-		ChildTab = transform.FindChild("Tabulation").gameObject;
-		ChildTab.SetActive (false);
-	}
+		ChildTab = gameObject;
+		ChildTab.GetComponent<Canvas>().enabled = false;	}
 	void Update(){
 
 		if (Input.GetKeyDown (KeyCode.Space)){
 			
-		ChildTab.SetActive (true);
-//			actifTab = true;			
+			ChildTab.GetComponent<Canvas>().enabled = true;   //			actifTab = true;			
 		}
 		if (Input.GetKeyUp (KeyCode.Space)) {
-			ChildTab.SetActive (false);
+			ChildTab.GetComponent<Canvas>().enabled = false;
 		}
 	}	
 }

@@ -5,22 +5,40 @@ using UnityEngine.UI;
 
 public class ChoosePlayerName : NetworkBehaviour {
 
-	[SyncVar] public string pname = "Player";
+	[SyncVar(hook = "ChangeMyNameOnOtherP")] public string pname;
 
 	public void SayYourName()
 	{
 		if (isLocalPlayer && GameObject.Find("NameInputField").transform.FindChild("Text").GetComponent<Text>().text != "" ) 
 		{
-			pname = GameObject.Find("NameInputField").transform.FindChild("Text").GetComponent<Text>().text;
-			CmdChangeName (pname);
+			StartCoroutine (InputedName());
+
+
 		}
+	}
+	IEnumerator InputedName()
+	{
+		yield return new WaitForFixedUpdate();
+		pname = GameObject.Find("NameInputField").transform.FindChild("Text").GetComponent<Text>().text;
+//		yield return new WaitForFixedUpdate();
+		CmdChangeName (pname);
+		
+	}
+
+	public void ChangeMyNameOnOtherP(string newPname)
+	{
+		if (!isLocalPlayer) {
+			gameObject.GetComponent<PlayerOnCollision> ().OnChangeNickname (newPname);
+	
+		}
+		pname = newPname;
 	}
 
 	[Command]
-	public void CmdChangeName(string newname)             //string newName)
+	public void CmdChangeName(string newName)             //string newName)
 	{
 		gameObject.GetComponent<PlayerChangeColor> ().CmdChangeColor ();
-		pname = newname;
+     	pname = newName;
 		RpcChangeThatName (pname);
 
 	}
