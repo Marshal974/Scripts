@@ -37,9 +37,9 @@ public class ChoosePlayerName : NetworkBehaviour {
 	[Command]
 	public void CmdChangeName(string newName)             //string newName)
 	{
-		gameObject.GetComponent<PlayerChangeColor> ().CmdChangeColor ();
+		gameObject.GetComponent<PlayerChangeColor> ().ChangeColor ();
      	pname = newName;
-		RpcChangeThatName (pname);
+		RpcChangeThatName (newName);
 
 	}
 
@@ -60,6 +60,8 @@ public class ChoosePlayerName : NetworkBehaviour {
 	{
 //		if (isLocalPlayer) {
 			gameObject.GetComponent<PlayerOnCollision> ().pNameOnPlayer = newName;
+		pname = newName;
+
 //		}
 	}
 }

@@ -13,7 +13,7 @@ public class PlayerOnCollision : NetworkBehaviour {
 	public List<Text> allPlayersdeath = new List<Text>();
 	public List<Text> allPlayersRez = new List<Text>();
 	public GameObject NbrDeathOtherPlayer;
-	[SyncVar]public GameObject theActivePlayer;
+	public GameObject theActivePlayer;
 	public GameObject deathEffect;
 	public int currentScene = 0;
 	public Rigidbody rb;
@@ -41,6 +41,7 @@ public class PlayerOnCollision : NetworkBehaviour {
 	ParticleSystem.EmissionModule DeadEffectEmi;
 
 	void Start () {
+
 		DeadEffect = GetComponent<ParticleSystem> ();
 		DeadEffectEmi = DeadEffect.emission;
 		pNameOnPlayer = this.GetComponent<ChoosePlayerName> ().pname; 
@@ -53,10 +54,11 @@ public class PlayerOnCollision : NetworkBehaviour {
 		SetEmiDown ();		
 
 		if (isLocalPlayer) {
+			theActivePlayer = gameObject;
 			GameObject[] PlayerObjectsArr = GameObject.FindGameObjectsWithTag ("Player");
 
 			foreach (GameObject i in PlayerObjectsArr) {
-				i.GetComponent<PlayerOnCollision> ().InitializeMe ();
+				i.GetComponent<PlayerOnCollision> ().IAmNew ();
 				}
 
 			allPlayersNickname.Add( GameObject.Find ("Player1name").GetComponent<Text>());
@@ -78,7 +80,7 @@ public class PlayerOnCollision : NetworkBehaviour {
 
 
 		}
-		if (isClient && !isLocalPlayer) {
+		if (!isLocalPlayer) {
 
 
 			GameObject[] PlayerObjectsArr = GameObject.FindGameObjectsWithTag ("Player");
@@ -94,19 +96,26 @@ public class PlayerOnCollision : NetworkBehaviour {
 		}
 
 	}
-		
+//	[Command]
+	public void IAmNew ()
+	{
+		InitializeMe ();
+	}
+
+//	[ClientRpc]
 	public void InitializeMe()
 	{
+		if (!isLocalPlayer) {
 		GameObject[] PlayerObjectsArr = GameObject.FindGameObjectsWithTag ("Player");
 
-		foreach (GameObject i in PlayerObjectsArr) {
+			 foreach (GameObject i in PlayerObjectsArr) {
 			if (i.GetComponent<PlayerInitialisation> ().isThePlayer == true) {
 				theActivePlayer = i;
-				return;
+//				return;
 			}
 		}
 
-		if (!isLocalPlayer) {
+
 			StartCoroutine (DontSpeed ());
 
 		}
@@ -115,6 +124,7 @@ public class PlayerOnCollision : NetworkBehaviour {
 	{
 		yield return new WaitForSeconds (0.5f);
 		theActivePlayer.GetComponent<PlayerOnCollision> ().AddPlayerRN (gameObject.name);
+
 
 	}
 	void SetEmiUp()
@@ -156,15 +166,15 @@ public class PlayerOnCollision : NetworkBehaviour {
 		Instantiate (deathEffect, transform.position, Quaternion.identity);
 		gameObject.GetComponent<BoxCollider> ().isTrigger = true; 
 		rb.velocity = Vector3.zero;
+		rb.angularVelocity = Vector3.zero;
 		AudioSource.PlayClipAtPoint (onDeathSound, gameObject.transform.position);
-
-
 		DeathCount++;
 		alive = false;
 		rb.useGravity = false;
 		rb.isKinematic = true;
 		if (!isLocalPlayer) {
 			SetEmiUp ();
+
 		}
 		if (isLocalPlayer) {
 			GameObject.Find ("RespawnBtn").GetComponent<Button> ().enabled = true;
@@ -185,13 +195,16 @@ public class PlayerOnCollision : NetworkBehaviour {
 			GameObject.Find ("RespawnBtn").GetComponent<Image> ().enabled = false;
 			gameObject.GetComponent<PlayerKillCam> ().ResetCam ();
 		}
+
+
+		Instantiate (lifeEffect, transform.position, Quaternion.identity);
+		rb.velocity = Vector3.zero;
+		rb.angularVelocity = Vector3.zero;
+		rb.isKinematic = false;
+		AudioSource.PlayClipAtPoint (onRezSound, gameObject.transform.position);
 		alive = true;
 		gameObject.GetComponent<BoxCollider> ().isTrigger = false; 
 		rb.useGravity = true;
-		Instantiate (lifeEffect, transform.position, Quaternion.identity);
-		rb.velocity = Vector3.zero;
-		rb.isKinematic = false;
-		AudioSource.PlayClipAtPoint (onRezSound, gameObject.transform.position);
 		if (!isLocalPlayer) {
 			SetEmiDown ();
 		}

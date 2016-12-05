@@ -10,11 +10,11 @@ public class ShowTab : MonoBehaviour {
 		ChildTab.GetComponent<Canvas>().enabled = false;	}
 	void Update(){
 
-		if (Input.GetKeyDown (KeyCode.Space)){
+		if (Input.GetKeyDown (KeyCode.Tab)){
 			
 			ChildTab.GetComponent<Canvas>().enabled = true;   //			actifTab = true;			
 		}
-		if (Input.GetKeyUp (KeyCode.Space)) {
+		if (Input.GetKeyUp (KeyCode.Tab)) {
 			ChildTab.GetComponent<Canvas>().enabled = false;
 		}
 	}	
