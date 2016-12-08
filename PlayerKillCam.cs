@@ -7,47 +7,46 @@ public class PlayerKillCam : NetworkBehaviour {
 	Camera myCam;
 	public bool activatePlayerFollow;
 	GameObject playerToFollow;
-	GameObject previousPlayerToFollow;
 	GameObject[] listOfPlayersToFollow;
 
 
-	void Start () {
+	void Start () 
+	{
 		playerToFollow = gameObject;
 		myCam = gameObject.GetComponentInChildren<Camera>();
-
-	
 	}
 
-	void FixedUpdate () {
-		if (isLocalPlayer) {
+	// va falloir revoir ca c'est con de le faire si souvent....:/
+	void FixedUpdate () 
+	{
+		if (isLocalPlayer) 
+		{
 			listOfPlayersToFollow = GameObject.FindGameObjectsWithTag ("Player");
-
 		}
 	}
-		void LateUpdate(){
-		if (playerToFollow == gameObject && activatePlayerFollow == true || previousPlayerToFollow == playerToFollow && activatePlayerFollow == true && listOfPlayersToFollow.Length >3) 
-		{
-			FindNewTarget ();
-		} 
+		void LateUpdate()
+	{
 
-		if (playerToFollow != gameObject && activatePlayerFollow == true) 
-		{
-			myCam.transform.position = playerToFollow.transform.FindChild ("CamCollider").transform.position;
-			myCam.transform.rotation = playerToFollow.transform.FindChild ("CamCollider").transform.rotation;
-			previousPlayerToFollow = playerToFollow;
-//			myCam.transform.position = playerToFollow.transform.position - offSetCam;
-//			myCam.transform.LookAt (playerToFollow.transform);
-		} else 
+		if (activatePlayerFollow != true) 
 		{
 			myCam.transform.position = gameObject.transform.FindChild ("CamCollider").transform.position;
 			myCam.transform.rotation = gameObject.transform.FindChild ("CamCollider").transform.rotation;
+			return;
+		}
+		if (playerToFollow != gameObject) 
+		{
+				myCam.transform.position = playerToFollow.transform.FindChild ("CamCollider").transform.position;
+				myCam.transform.rotation = playerToFollow.transform.FindChild ("CamCollider").transform.rotation;
+
+//			myCam.transform.position = playerToFollow.transform.position - offSetCam;
+//			myCam.transform.LookAt (playerToFollow.transform);
 		}
 
-		if (Input.GetMouseButtonDown(1) && activatePlayerFollow == true) {
+		if (Input.GetMouseButtonDown (1)) 
+		{
 			FindNewTarget ();
 		}
-
-	
+				
 	}
 
 	public void FindNewTarget ()

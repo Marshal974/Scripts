@@ -26,7 +26,7 @@ public class PlayerRespawn : NetworkBehaviour {
 	[Command]
 	void CmdRespawn (){
 
-		gameObject.transform.position = GameObject.Find("SpawnPoint 2").transform.position;
+		//gameObject.transform.position = GameObject.Find("SpawnPoint 2").transform.position;
 		gameObject.GetComponent<PlayerOnCollision> ().RpcOnRez();
 		AudioSource.PlayClipAtPoint(respawnSound, gameObject.transform.position);
 		RpcRespawn ();

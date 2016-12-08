@@ -18,8 +18,8 @@ public class PlayerOnCollision : NetworkBehaviour {
 	public int currentScene = 0;
 	public Rigidbody rb;
 	public GameObject repere;
-	public AudioClip onBounceSound;
-
+	public AudioClip[] onBounceSound;
+	bool alreadyBouncing = false;
 	[SyncVar]public bool alive = true;
 	public GameObject lifeEffect;
 	private GameObject nbrDeathObj ;
@@ -27,15 +27,13 @@ public class PlayerOnCollision : NetworkBehaviour {
 	private GameObject messObj ;
 	public Text PlayerAnnounce;
 	[SyncVar(hook = "OnChangeDeath" )]public int DeathCount = 0;
-	[SyncVar(hook = "OnChangeRez")]public int RezCount = 0;
+	[SyncVar]public int RezCount = 0;
 	public AudioClip onDeathSound;
 	public AudioClip onRezSound;
 	public string isHeSavior;
-	[SyncVar]
-	public string saviorName = "pupute";
-
-
+	[SyncVar] public string saviorName = "pupute";
 	[SyncVar]public string pNameOnPlayer;
+	bool isInvincible;
 
 	ParticleSystem DeadEffect;
 	ParticleSystem.EmissionModule DeadEffectEmi;
@@ -136,35 +134,57 @@ public class PlayerOnCollision : NetworkBehaviour {
 		DeadEffectEmi.rate = new ParticleSystem.MinMaxCurve (0f);
 	}
 		
-	void OnCollisionEnter (Collision other) {
-
-		if (other.gameObject.tag == "BadGuys" && alive == true && isLocalPlayer) {
-			CmdIAmDead ();
-		}
-				
-	}
-	[Command]
-	public void CmdIAmDead(){
-		RpcOnDeath ();
-	}
-		void OnTriggerEnter(Collider otherC)
+	void OnCollisionEnter (Collision other) 
 	{
+		if (!isLocalPlayer) 
+		{
+			return;
+		}
+		if (other.gameObject.tag == "BadGuys" && alive == true && isInvincible == false) 
+		{
+				CmdIAmDead ();
+		}
+		if (other.gameObject.tag == "Bounce" && alreadyBouncing == false) 
+			{
+				StartCoroutine (RndBounce ());
+				alreadyBouncing = true;
+			}
+	}
 
-		if (isLocalPlayer) {
-			if (otherC.gameObject.tag == "Player" && alive == false) {
-				saviorName = otherC.gameObject.GetComponent<PlayerOnCollision>().pNameOnPlayer;
-			CmdTellThemAll (saviorName, pNameOnPlayer);
+
+	IEnumerator RndBounce()
+	{
+		AudioSource.PlayClipAtPoint (onBounceSound[Random.Range(0, onBounceSound.Length-1)], gameObject.transform.position);
+		yield return new WaitForSeconds (3f);
+		alreadyBouncing = false;
+	}
 
 
+	void OnTriggerExit(Collider otherC)
+	{
+		if (!isLocalPlayer) 
+		{
+			return;
+		}
+		if (alive == false) {
+			if (otherC.gameObject.tag == "Player" ) 
+			{
+				saviorName = otherC.gameObject.GetComponent<PlayerOnCollision> ().pNameOnPlayer;
+				alive = true; //recent. evite le double point gagner? 
+				CmdTellThemAll (saviorName, pNameOnPlayer);
 			}
 		}
+	}
+	[Command]
+	public void CmdIAmDead()
+	{
+		RpcOnDeath ();
 	}
 		
 	[ClientRpc]
 	public void RpcOnDeath()
 	{
 		Instantiate (deathEffect, transform.position, Quaternion.identity);
-		gameObject.GetComponent<BoxCollider> ().isTrigger = true; 
 		rb.velocity = Vector3.zero;
 		rb.angularVelocity = Vector3.zero;
 		AudioSource.PlayClipAtPoint (onDeathSound, gameObject.transform.position);
@@ -172,15 +192,16 @@ public class PlayerOnCollision : NetworkBehaviour {
 		alive = false;
 		rb.useGravity = false;
 		rb.isKinematic = true;
+		gameObject.GetComponent<BoxCollider> ().isTrigger = true; 
 		if (!isLocalPlayer) {
 			SetEmiUp ();
 
 		}
 		if (isLocalPlayer) {
-			GameObject.Find ("RespawnBtn").GetComponent<Button> ().enabled = true;
-			GameObject.Find ("RespawnBtn").GetComponent<Image> ().enabled = true;
 			gameObject.GetComponent<PlayerController> ().enabled = false;
-
+			GameObject.Find ("RespawnBtn").GetComponent<Button> ().enabled = true;
+			GameObject.Find ("BgKillcam").GetComponent<Image> ().enabled = true;
+			GameObject.Find ("RespawnBtn").GetComponent<Image> ().enabled = true;
 			nbrDeathText.text = DeathCount.ToString ();
 			gameObject.GetComponent<PlayerKillCam> ().FindNewTarget ();
 		}
@@ -190,27 +211,35 @@ public class PlayerOnCollision : NetworkBehaviour {
 	public void RpcOnRez()
 	{
 		if (isLocalPlayer) {
+
 			gameObject.GetComponent<PlayerController> ().enabled = true;
 			GameObject.Find ("RespawnBtn").GetComponent<Button> ().enabled = false;
 			GameObject.Find ("RespawnBtn").GetComponent<Image> ().enabled = false;
+			GameObject.Find ("BgKillcam").GetComponent<Image> ().enabled = false;
 			gameObject.GetComponent<PlayerKillCam> ().ResetCam ();
+			rb.velocity = Vector3.zero;
+			rb.angularVelocity = Vector3.zero;
+			StartCoroutine (Invincible (1));
 		}
-
-
+			
 		Instantiate (lifeEffect, transform.position, Quaternion.identity);
-		rb.velocity = Vector3.zero;
-		rb.angularVelocity = Vector3.zero;
+		gameObject.GetComponent<BoxCollider> ().isTrigger = false;
+		alive = true;
 		rb.isKinematic = false;
 		AudioSource.PlayClipAtPoint (onRezSound, gameObject.transform.position);
-		alive = true;
-		gameObject.GetComponent<BoxCollider> ().isTrigger = false; 
 		rb.useGravity = true;
 		if (!isLocalPlayer) {
+//			alive = true;
+
 			SetEmiDown ();
 		}
 	}
-
-
+	IEnumerator Invincible(float inv)
+	{
+		isInvincible = true;
+		yield return new WaitForSeconds (inv);
+		isInvincible = false;
+	}
 
 	IEnumerator ClientLocalMessage(string otherCName){
 		string totalMess;
@@ -256,19 +285,11 @@ public class PlayerOnCollision : NetworkBehaviour {
 			//quand tu te co, si t pas localtoutca, mais que t'es sur un client; tu dois lui dire : je suis nouveau, attribue moi une ligne dans ta liste; met dans la premiere case mon nom; apres mon scoredeath; et mon scorerez; et souviens toi que tout ca c est a moi.
 
 			theActivePlayer.GetComponent<PlayerOnCollision> ().ChangeOtherDeaths (deaths, gameObject.name);
-		}
-	}
-	public void OnChangeRez(int rez){
 
-		if(!isLocalPlayer){
-			//il faut lui dire qui tu es (pnameonplayer) et le nouveau score de morts (deaths)
-			//ensuite il recoit la commande qui va le faire rechercher la ligne correspondant a ton joueur; de la il en déduira la case correcpondant a ta mort; et prendra le deaths pour le mettre dedans.
-			//il doit donc déja savoir quelle ligne est la tienne
-			//quand tu te co, si t pas localtoutca, mais que t'es sur un client; tu dois lui dire : je suis nouveau, attribue moi une ligne dans ta liste; met dans la premiere case mon nom; apres mon scoredeath; et mon scorerez; et souviens toi que tout ca c est a moi.
-
-			theActivePlayer.GetComponent<PlayerOnCollision> ().ChangeOtherRez (rez, gameObject.name);
 		}
+
 	}
+
 	public void OnChangeNickname(string nickN){
 
 		if(!isLocalPlayer){
@@ -313,17 +334,13 @@ public class PlayerOnCollision : NetworkBehaviour {
 
 	public void ChangeOtherRez(int rezs, string Rname)
 	{
-		int deathsIndex = 0;
+		StartCoroutine (ChangeThatRezTab(rezs, Rname));
+	}
+	IEnumerator ChangeThatRezTab(int rezs3, string Rname3){
 
-		for (int i = 0; i < allPlayersRealNames.Count; i++) 
-		{
-			if (allPlayersRealNames [i] == Rname) {
-				deathsIndex = i;
-				break;
-			}
-		}
-
-		allPlayersRez [deathsIndex].GetComponent<Text>().text = rezs.ToString ();
+		int rezIndex = ChangeRez(Rname3);
+		yield return new WaitForSeconds (0.3f);
+		allPlayersRez [rezIndex].GetComponent<Text>().text = rezs3.ToString ();
 	}
 	public void ChangeOtherNickname(string Pnamedude, string Rname)
 	{
@@ -338,6 +355,21 @@ public class PlayerOnCollision : NetworkBehaviour {
 		}
 
 		allPlayersNickname [deathsIndex].GetComponent<Text>().text = Pnamedude;
+	}
+
+
+	int ChangeRez(string Rname2)
+	{
+		
+
+		for (int i = 0; i < allPlayersRealNames.Count; i++) 
+		{
+			if (allPlayersRealNames [i] == Rname2) {
+
+				return i;
+			} 
+		}
+		return 5;
 	}
 }
 

@@ -4,7 +4,7 @@ using System.Collections;
 
 public class PlayerController : NetworkBehaviour {
 
-	[SyncVar] public float moveSpeed;
+	public float moveSpeed;
 	float maxSpeed = 10f;
 	Vector3 inputV;
 	public float rotationSpeed = 100f;

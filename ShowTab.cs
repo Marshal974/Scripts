@@ -5,9 +5,11 @@ public class ShowTab : MonoBehaviour {
 //	private bool actifTab;
 	private GameObject ChildTab;
 
-	void Awake(){
+	void Awake()
+	{
 		ChildTab = gameObject;
-		ChildTab.GetComponent<Canvas>().enabled = false;	}
+		ChildTab.GetComponent<Canvas>().enabled = false;	
+	}
 	void Update(){
 
 		if (Input.GetKeyDown (KeyCode.Tab)){

@@ -4,7 +4,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-public class NetworkManagerCustom : NetworkManager {
+public class NetworkManagerCustom : NetworkManager 
+{
 	public AudioClip bip1;
 	public AudioClip bip2;
 
@@ -26,6 +27,11 @@ public class NetworkManagerCustom : NetworkManager {
 	public void ConnectToLobby ()
 	{
 		AudioSource.PlayClipAtPoint(bip2, gameObject.transform.position);
+
+	}
+	public void QuitGame ()
+	{
+		Application.Quit ();
 
 	}
 
@@ -64,6 +70,7 @@ public class NetworkManagerCustom : NetworkManager {
 	}
 	IEnumerator SetupOtherSceneButtons()
 	{
+		
 		yield return new WaitForSeconds(0.3f);
 		GameObject.Find("ButtonDisconnect").GetComponent<Button> ().onClick.RemoveAllListeners ();
 		GameObject.Find("ButtonDisconnect").GetComponent<Button> ().onClick.AddListener (NetworkManager.singleton.StopHost);

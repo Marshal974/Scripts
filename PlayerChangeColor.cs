@@ -26,4 +26,15 @@ public class PlayerChangeColor : NetworkBehaviour {
 		foreach (var r in GetComponentsInChildren<Renderer>())
 			r.material.color = d;
 	}
+
+	public override void OnStartLocalPlayer ()
+	{
+		if (!isLocalPlayer) 
+		{
+			ApplyColor (m_color);
+		}
+	}
+
+
+
 }

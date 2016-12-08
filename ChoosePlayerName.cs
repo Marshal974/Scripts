@@ -38,29 +38,38 @@ public class ChoosePlayerName : NetworkBehaviour {
 	public void CmdChangeName(string newName)             //string newName)
 	{
 		gameObject.GetComponent<PlayerChangeColor> ().ChangeColor ();
-     	pname = newName;
+	  	pname = newName;
 		RpcChangeThatName (newName);
 
 	}
-
-	void Start () {
-		if(isLocalPlayer){
-			GameObject.Find ("ChangeYourName").GetComponent<Button> ().onClick.AddListener (SayYourName);
-		}
+	public override void OnStartLocalPlayer()
+	{
+		GameObject.Find ("ChangeYourName").GetComponent<Button> ().onClick.AddListener (SayYourName);
 	}
-	
-	// Update is called once per frame
-	void Update () {
-
-		this.GetComponentInChildren<TextMesh> ().text = pname;
-
+//	void Start () {
+//		if(!isLocalPlayer)
+//		{
+//
+//		}
+//	}
+	IEnumerator GetNamesOfCoPlayers()
+	{
+		yield return new WaitForSeconds (2f);
+		ChangeMyNameOnOtherP (pname);
 	}
+	public override void OnStartClient ()
+	{
+		StartCoroutine (GetNamesOfCoPlayers ());
+	}
+
 	[ClientRpc]
 	public void RpcChangeThatName (string newName)
 	{
 //		if (isLocalPlayer) {
 			gameObject.GetComponent<PlayerOnCollision> ().pNameOnPlayer = newName;
-		pname = newName;
+		this.GetComponentInChildren<TextMesh> ().text = newName;
+
+//		pname = newName;
 
 //		}
 	}
