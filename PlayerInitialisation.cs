@@ -25,7 +25,6 @@ public class PlayerInitialisation : NetworkBehaviour {
 			camMenu.gameObject.SetActive (false);
 			isThePlayer = true;
 	
-
 		}	
 	}
 }

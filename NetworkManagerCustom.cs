@@ -71,7 +71,7 @@ public class NetworkManagerCustom : NetworkManager
 	IEnumerator SetupOtherSceneButtons()
 	{
 		
-		yield return new WaitForSeconds(0.3f);
+		yield return new WaitForSeconds(0.5f);
 		GameObject.Find("ButtonDisconnect").GetComponent<Button> ().onClick.RemoveAllListeners ();
 		GameObject.Find("ButtonDisconnect").GetComponent<Button> ().onClick.AddListener (NetworkManager.singleton.StopHost);
 	}

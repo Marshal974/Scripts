@@ -20,17 +20,13 @@ public class ChoosePlayerName : NetworkBehaviour {
 	{
 		yield return new WaitForFixedUpdate();
 		pname = GameObject.Find("NameInputField").transform.FindChild("Text").GetComponent<Text>().text;
-//		yield return new WaitForFixedUpdate();
 		CmdChangeName (pname);
 		
 	}
 
 	public void ChangeMyNameOnOtherP(string newPname)
 	{
-		if (!isLocalPlayer) {
-			gameObject.GetComponent<PlayerOnCollision> ().OnChangeNickname (newPname);
-	
-		}
+		gameObject.GetComponent<PlayerOnCollision> ().OnChangeNickname (newPname);
 		pname = newPname;
 	}
 
@@ -46,15 +42,10 @@ public class ChoosePlayerName : NetworkBehaviour {
 	{
 		GameObject.Find ("ChangeYourName").GetComponent<Button> ().onClick.AddListener (SayYourName);
 	}
-//	void Start () {
-//		if(!isLocalPlayer)
-//		{
-//
-//		}
-//	}
+
 	IEnumerator GetNamesOfCoPlayers()
 	{
-		yield return new WaitForSeconds (2f);
+		yield return new WaitForSeconds (4f);
 		ChangeMyNameOnOtherP (pname);
 	}
 	public override void OnStartClient ()
@@ -65,12 +56,8 @@ public class ChoosePlayerName : NetworkBehaviour {
 	[ClientRpc]
 	public void RpcChangeThatName (string newName)
 	{
-//		if (isLocalPlayer) {
-			gameObject.GetComponent<PlayerOnCollision> ().pNameOnPlayer = newName;
+		gameObject.GetComponent<PlayerOnCollision> ().pNameOnPlayer = newName;
 		this.GetComponentInChildren<TextMesh> ().text = newName;
 
-//		pname = newName;
-
-//		}
 	}
 }

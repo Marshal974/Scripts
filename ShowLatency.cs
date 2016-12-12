@@ -17,10 +17,7 @@ public class ShowLatency : NetworkBehaviour {
 			latencyDisplay = GameObject.Find ("LatencyTxt").GetComponent<Text> ();
 		}
 	}
-	void Start () {
-	
 
-	}
 	
 	// Update is called once per frame
 	void Update () 

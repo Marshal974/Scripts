@@ -63,7 +63,7 @@ void CmdISavedAGuy()
 //}
 	public void OnChangeRez(int rez){
 		rezCount = rez;
-		if(!isLocalPlayer){
+//		if(!isLocalPlayer){
 			//il faut lui dire qui tu es (pnameonplayer) et le nouveau score de morts (deaths)
 			//ensuite il recoit la commande qui va le faire rechercher la ligne correspondant a ton joueur; de la il en déduira la case correcpondant a ta mort; et prendra le deaths pour le mettre dedans.
 			//il doit donc déja savoir quelle ligne est la tienne
@@ -71,7 +71,7 @@ void CmdISavedAGuy()
 
 			gameObject.GetComponent<PlayerOnCollision>().theActivePlayer.GetComponent<PlayerOnCollision> ().ChangeOtherRez (rez, gameObject.name);
 
-		}
+//		}
 		if (isLocalPlayer) 
 		{
 			RezMess.text = rezCount.ToString();
